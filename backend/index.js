@@ -57,6 +57,64 @@ app.get('/api/slots', async (req, res) => {
   }
 });
 
+app.post('/api/slots/generate', async (req, res) => {
+  const { date, startTime, endTime, numberOfSlots } = req.body;
+
+  if (!date || !startTime || !endTime || !numberOfSlots) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  function convertToMinutes(timeStr) {
+    const [hourMin, ampm] = timeStr.split(' ');
+    let [hour, min] = hourMin.split(':').map(Number);
+    if (ampm.toLowerCase() === 'pm' && hour !== 12) hour += 12;
+    if (ampm.toLowerCase() === 'am' && hour === 12) hour = 0;
+    return hour * 60 + min;
+  }
+
+  function convertToTimeStr(minutes) {
+    const hour24 = Math.floor(minutes / 60);
+    const min = minutes % 60;
+    const ampm = hour24 >= 12 ? 'PM' : 'AM';
+    let hour12 = hour24 % 12;
+    if (hour12 === 0) hour12 = 12;
+    return `${hour12.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')} ${ampm}`;
+  }
+
+  try {
+    const startMin = convertToMinutes(startTime);
+    const endMin = convertToMinutes(endTime);
+    const totalDuration = endMin - startMin;
+
+    if (totalDuration <= 0) {
+      return res.status(400).json({ error: 'End time must be after start time' });
+    }
+
+    const slotDuration = Math.floor(totalDuration / numberOfSlots);
+    const batch = db.batch();
+
+    for (let i = 0; i < numberOfSlots; i++) {
+      const slotStartMin = startMin + i * slotDuration;
+      const slotTime = convertToTimeStr(slotStartMin);
+      const slotRef = db.collection('slots').doc();
+
+      batch.set(slotRef, {
+        date,
+        time: slotTime,
+        isBooked: false,
+        patientId: null,
+      });
+    }
+
+    await batch.commit();
+    res.status(201).json({ message: 'Slots generated successfully' });
+  } catch (error) {
+    console.error('Error generating slots:', error);
+    res.status(500).json({ error: 'Failed to generate slots' });
+  }
+});
+
+
 app.post('/webhook', async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
   const incomingMsg = req.body.Body.trim();
