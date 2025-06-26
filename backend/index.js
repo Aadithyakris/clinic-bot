@@ -32,6 +32,31 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const client = twilio(accountSid, authToken);
 
 // WhatsApp Webhook
+
+app.get('/api/slots', async (req, res) => {
+  const { date } = req.query;
+  if (!date) {
+    return res.status(400).json({ error: 'Missing required parameter: date' });
+  }
+
+  try {
+    const snapshot = await db.collection('slots')
+      .where('date', '==', date)
+      .where('isBooked', '==', false)
+      .get();
+
+    const slots = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    res.status(200).json(slots);
+  } catch (error) {
+    console.error('Error fetching slots:', error);
+    res.status(500).json({ error: 'Failed to fetch slots' });
+  }
+});
+
 app.post('/webhook', async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
   const incomingMsg = req.body.Body.trim();
