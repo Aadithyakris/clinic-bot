@@ -1,11 +1,14 @@
 import React from 'react';
-import SlotList from './components/SlotList';
+import SlotForm from './components/SlotForm';
+import SlotList from './components/SlotList'; // optional, if already exists
 
 function App() {
   return (
-    <div className="App">
+    <div>
       <h1>Doctor Admin Panel</h1>
-      <SlotList />
+      <SlotForm />
+      <hr />
+      <SlotList /> {/* optional: to view available slots */}
     </div>
   );
 }
