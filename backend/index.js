@@ -7,7 +7,13 @@ const userSessions = new Map();
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+  origin: 'http://localhost:3000', // or your deployed frontend
+  methods: 'GET,POST,PUT,DELETE',
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -266,7 +272,7 @@ app.post('/webhook', async (req, res) => {
       age: session.age,
       bookedAt: new Date(),
       slotId: session.selectedSlotId,
-      date: slotDoc.data().date // ✅ Add this to enable filtering by date
+      date: slotDoc.data().date 
     });
 
     await slotRef.update({ isBooked: true, patientId: patientRef.id });
