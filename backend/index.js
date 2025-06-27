@@ -59,6 +59,27 @@ app.get('/api/slots', async (req, res) => {
   }
 });
 
+app.post('/api/slots/delete', async (req, res) => {
+  const { slotIds } = req.body;
+
+  if (!Array.isArray(slotIds) || slotIds.length === 0) {
+    return res.status(400).json({ error: 'No slots selected' });
+  }
+
+  try {
+    const batch = db.batch();
+    slotIds.forEach((slotId) => {
+      const ref = db.collection('slots').doc(slotId);
+      batch.delete(ref);
+    });
+    await batch.commit();
+    res.json({ message: 'Slots deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting slots:', err);
+    res.status(500).json({ error: 'Failed to delete slots' });
+  }
+});
+
 app.post('/api/book-slot', async (req, res) => {
   const { slotId, name, age, contact } = req.body;
 
