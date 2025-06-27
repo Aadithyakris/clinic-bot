@@ -2,15 +2,18 @@
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
-const userSessions = new Map();
 require('dotenv').config();
 
 const app = express();
 const corsOptions = {
-  origin: 'http://localhost:3000', // or your deployed frontend
-  methods: 'GET,POST,PUT,DELETE',
+  origin: [
+    'http://localhost:3000', // local frontend
+    'https://clinic-frontend-qved.vercel.app' // ✅ deployed frontend on Vercel
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 
 app.use(express.json());
