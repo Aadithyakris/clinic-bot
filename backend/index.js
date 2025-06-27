@@ -6,13 +6,11 @@ require('dotenv').config();
 
 const app = express();
 const corsOptions = {
-  origin: [
-    'http://localhost:3000', // local frontend
-    'https://clinic-frontend-qved.vercel.app' // ✅ deployed frontend on Vercel
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: ['http://localhost:3000', 'https://clinic-frontend-ebon.vercel.app'], // ✅ allow both local + deployed frontend
+  methods: 'GET,POST,PUT,DELETE',
   credentials: true,
 };
+
 
 app.use(cors(corsOptions));
 
