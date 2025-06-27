@@ -228,29 +228,54 @@ app.post('/webhook', async (req, res) => {
         session.step = 'awaiting_contact';
         twiml.message('📞 Please enter your *contact number* (10 digits):');
       }
+    // } else if (session.step === 'awaiting_contact') {
+    //   session.contact = incomingMsg;
+    //   const slotRef = db.collection('slots').doc(session.selectedSlotId);
+    //   const slotDoc = await slotRef.get();
+
+    //   if (!slotDoc.exists || slotDoc.data().isBooked) {
+    //     twiml.message('❌ The selected slot is no longer available. Please start again.');
+    //     session.step = 'initial';
+    //   } else {
+    //     const patientRef = await db.collection('patients').add({
+    //       name: session.name,
+    //       contact: session.contact,
+    //       age: session.age,
+    //       bookedAt: new Date(),
+    //       slotId: session.selectedSlotId,
+    //     });
+
+    //     await slotRef.update({ isBooked: true, patientId: patientRef.id });
+
+    //     twiml.message(`✅ Appointment booked for *${slotDoc.data().time}* on *${slotDoc.data().date}*. Thank you!`);
+    //     userSessions.delete(from);
+    //   }
+    // }
     } else if (session.step === 'awaiting_contact') {
-      session.contact = incomingMsg;
-      const slotRef = db.collection('slots').doc(session.selectedSlotId);
-      const slotDoc = await slotRef.get();
+  session.contact = incomingMsg;
+  const slotRef = db.collection('slots').doc(session.selectedSlotId);
+  const slotDoc = await slotRef.get();
 
-      if (!slotDoc.exists || slotDoc.data().isBooked) {
-        twiml.message('❌ The selected slot is no longer available. Please start again.');
-        session.step = 'initial';
-      } else {
-        const patientRef = await db.collection('patients').add({
-          name: session.name,
-          contact: session.contact,
-          age: session.age,
-          bookedAt: new Date(),
-          slotId: session.selectedSlotId,
-        });
+  if (!slotDoc.exists || slotDoc.data().isBooked) {
+    twiml.message('❌ The selected slot is no longer available. Please start again.');
+    session.step = 'initial';
+  } else {
+    const patientRef = await db.collection('patients').add({
+      name: session.name,
+      contact: session.contact,
+      age: session.age,
+      bookedAt: new Date(),
+      slotId: session.selectedSlotId,
+      date: slotDoc.data().date // ✅ Add this to enable filtering by date
+    });
 
-        await slotRef.update({ isBooked: true, patientId: patientRef.id });
+    await slotRef.update({ isBooked: true, patientId: patientRef.id });
 
-        twiml.message(`✅ Appointment booked for *${slotDoc.data().time}* on *${slotDoc.data().date}*. Thank you!`);
-        userSessions.delete(from);
-      }
-    }
+    twiml.message(`✅ Appointment booked for *${slotDoc.data().time}* on *${slotDoc.data().date}*. Thank you!`);
+    userSessions.delete(from);
+  }
+}
+
 
     // Cancel flow
     else if (incomingMsg === '2' && session.step === 'initial') {
