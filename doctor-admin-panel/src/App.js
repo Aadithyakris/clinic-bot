@@ -1,6 +1,7 @@
 import React from 'react';
 import SlotForm from './components/SlotForm';
-import SlotList from './components/SlotList'; // optional, if already exists
+import SlotList from './components/SlotList'; // optional
+import BookedSlots from './components/BookedSlots'; // ✅ import the new component
 
 function App() {
   return (
@@ -9,6 +10,8 @@ function App() {
       <SlotForm />
       <hr />
       <SlotList /> {/* optional: to view available slots */}
+      <hr />
+      <BookedSlots /> {/* ✅ added to show booked slots */}
     </div>
   );
 }

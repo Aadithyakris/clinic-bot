@@ -114,6 +114,58 @@ app.post('/api/slots/generate', async (req, res) => {
   }
 });
 
+app.get('/api/booked-slots', async (req, res) => {
+  const { date } = req.query;
+
+  if (!date) {
+    return res.status(400).json({ error: 'Missing required parameter: date' });
+  }
+
+  try {
+    const patientsSnapshot = await db.collection('patients')
+      .where('date', '==', date)
+      .get();
+
+    const bookedSlots = [];
+
+    for (const doc of patientsSnapshot.docs) {
+      const data = doc.data();
+
+      // Get time from slots collection
+      const slotDoc = await db.collection('slots').doc(data.slotId).get();
+
+      if (slotDoc.exists) {
+        const slotData = slotDoc.data();
+
+        bookedSlots.push({
+          id: doc.id,
+          name: data.name,
+          age: data.age,
+          contact: data.contact,
+          time: slotData.time,
+        });
+      }
+    }
+
+    // Sort by time
+    bookedSlots.sort((a, b) => {
+      const parseTime = t => {
+        const [time, ampm] = t.split(' ');
+        let [hr, min] = time.split(':').map(Number);
+        if (ampm === 'PM' && hr !== 12) hr += 12;
+        if (ampm === 'AM' && hr === 12) hr = 0;
+        return hr * 60 + min;
+      };
+      return parseTime(a.time) - parseTime(b.time);
+    });
+
+    res.json(bookedSlots);
+  } catch (error) {
+    console.error('Error fetching booked slots:', error);
+    res.status(500).json({ error: 'Failed to fetch booked slots' });
+  }
+});
+
 
 app.post('/webhook', async (req, res) => {
   const twiml = new twilio.twiml.MessagingResponse();
