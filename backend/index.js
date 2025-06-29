@@ -207,6 +207,17 @@ app.post('/api/slots/generate', async (req, res) => {
   }
 });
 
+app.get('/api/patient/:id', async (req, res) => {
+  try {
+    const doc = await db.collection('patients').doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: 'Patient not found' });
+    res.json(doc.data());
+  } catch (err) {
+    console.error('Error fetching patient:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 app.get('/api/booked-slots', async (req, res) => {
   const { date } = req.query;
 
